@@ -7,7 +7,7 @@ function App() {
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <p>
-          Edit <code>src/App.js</code> and save to reload to my old version.
+          Edit <code>src/App.js</code> and save to reload to new version to check k8s deployment second check.................
         </p>
         <a
           className="App-link"
