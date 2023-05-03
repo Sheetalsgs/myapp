@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nodeapp-deployment
+  namespace: credible
   labels:
     app: nodeapp
 spec:
@@ -15,7 +16,7 @@ spec:
         app: nodeapp 
     spec:
       imagePullSecrets:
-      - name: regcred
+      - name: secret
       containers:
       - name: nodeserver
         image: sheetalshevalkar/test-project:latest

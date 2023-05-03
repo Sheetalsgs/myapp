@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nodeapp-deployment
+  namespace: credible
   labels:
     app: nodeapp
 spec:
@@ -12,14 +13,15 @@ spec:
   template:
     metadata:
       labels:
-        app: nodeapp 
+        app: nodeapp
     spec:
       imagePullSecrets:
-      - name: regcred
+      - name: secret
+      nodeSelector:
+        env: node2
       containers:
       - name: nodeserver
         image: sheetalshevalkar/test-project:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 3000
-
