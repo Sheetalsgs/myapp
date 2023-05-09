@@ -1,10 +1,30 @@
-FROM node:lts-alpine
-ENV NODE_ENV=production
-WORKDIR /usr/src/app
-COPY ["package.json", "package-lock.json*", "npm-shrinkwrap.json*", "./"]
-RUN npm install --production --silent && mv node_modules ../
+# Use an official Node.js runtime as a parent image
+FROM node:12-alpine
+
+# Set the working directory to /app
+WORKDIR /app
+
+# Copy the package.json and package-lock.json files to /app
+COPY package*.json ./
+
+# Install the dependencies
+RUN npm install
+
+# Copy the rest of the application code to /app
 COPY . .
-EXPOSE 3000
-RUN chown -R node /usr/src/app
-USER node
-CMD ["npm", "run", "start"]
+
+# Build the production version of the app
+RUN npm run build
+
+# Use an official Nginx image as a parent image
+FROM nginx:alpine
+
+# Copy the built app from the previous stage to the nginx public directory
+COPY --from=0 /app/build /usr/share/nginx/html
+
+# Expose port 80
+EXPOSE 80
+
+# Start Nginx when the container is started
+CMD ["nginx", "-g", "daemon off;"]
+
