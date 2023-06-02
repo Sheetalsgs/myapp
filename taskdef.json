@@ -1,5 +1,5 @@
 {
-    "family": "hello-world",
+    "family": "test",
     "containerDefinitions": [
         {
             "image": "%REPOSITORY_URI%:v_%BUILD_NUMBER%",
