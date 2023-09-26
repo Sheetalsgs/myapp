@@ -1,0 +1,71 @@
+name: Deploy to dev
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Select a branch to deploy'
+        required: true
+        default: 'dev'
+      
+
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+       
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.branch }}
+      - name: Install dependencies
+        run: npm install
+      - name: list before build
+        run: ls -al
+      - name: Build app
+        run: npm run build
+      - name: list after build
+        run: ls -al
+      - name: list inside build
+        run: ls ./dist
+      - name: Run tests
+        run: npm test
+      - name: list after lest
+        run: ls -al
+        
+  deploy:
+    runs-on: self-hosted
+    needs: build
+    steps:
+      - name: Set up SSH connection
+        uses: webfactory/ssh-agent@v0.5.0
+        with:
+         ssh-private-key: ${{ secrets.EC2_KEY }}
+      - name: Delete previous build
+        run: ssh ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "rm -rf /var/myapp/dist"
+      - name: Copy files to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_KEY }}
+          source: ./
+          target: "/var/myapp"
+      - name: List files on EC2
+        run: ssh ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "ls -al /var/myapp"
+      - name: Set up SSH connection to restart app
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_KEY }}
+          port: ${{ secrets.EC2_PORT }}
+          script: |
+             cd /var/myapp/dist
+             if pm2 describe main > /dev/null; then
+               # app is running, restart it
+               pm2 restart backendapp
+             else
+               # app is not running, start it
+               pm2 start /var/myapp/dist/main.js --name backendapp
+               pm2 list
+             fi
